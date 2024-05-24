@@ -4,12 +4,13 @@
 #include "timer.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define BIRD_WIDTH 5
 #define BIRD_HEIGHT 3
 #define GRAVITY 0.05
 #define JUMP_STRENGTH -0.50
-#define OBSTACLE_WIDTH 3
+#define OBSTACLE_WIDTH 5
 #define OBSTACLE_GAP 6
 #define NUM_OBSTACLES 3
 
@@ -17,6 +18,7 @@ int* x;
 double* y;
 double* velocity;
 int score = 0;
+int topScore = 0;
 int gameStarted = 0;
 int jumping = 0;
 
@@ -26,6 +28,7 @@ typedef struct {
 } Obstacle;
 
 Obstacle* obstacles[NUM_OBSTACLES];
+char obstacleMatrix[SCREEN_WIDTH][SCREEN_HEIGHT];
 
 void delay(unsigned int milliseconds)
 {
@@ -36,7 +39,7 @@ void printBird()
 {
     screenSetColor(CYAN, DARKGRAY);
     screenGotoxy(*x, (int)(*y));
-    printf(" @< ");
+    printf(" @> ");
     screenGotoxy(*x, (int)(*y) + 1);
     printf("/o \\");
 }
@@ -61,9 +64,20 @@ void drawBorders()
 
 void gameOver()
 {
+    if (score > topScore) {
+        topScore = score;
+        FILE *file = fopen("topscore.txt", "w");
+        if (file) {
+            fprintf(file, "%d\n", topScore);
+            fclose(file);
+        }
+    }
+
     screenSetColor(RED, BLACK);
     screenGotoxy(SCREEN_WIDTH / 2 - 5, SCREEN_HEIGHT / 2);
     printf("Game Over");
+    screenGotoxy(SCREEN_WIDTH / 2 - 5, SCREEN_HEIGHT / 2 + 1);
+    printf("Top Score: %d", topScore);
     screenUpdate();
     delay(5000);
 }
@@ -86,12 +100,36 @@ void freeObstacles()
     }
 }
 
+void updateObstacleMatrix()
+{
+    memset(obstacleMatrix, 0, sizeof(obstacleMatrix));
+    for (int i = 0; i < NUM_OBSTACLES; i++)
+    {
+        if (obstacles[i]->x >= 0 && obstacles[i]->x < SCREEN_WIDTH)
+        {
+            for (int y = 0; y < SCREEN_HEIGHT; y++)
+            {
+                if (y < obstacles[i]->gap_y || y > obstacles[i]->gap_y + OBSTACLE_GAP)
+                {
+                    for (int w = 0; w < OBSTACLE_WIDTH; w++)
+                    {
+                        if (obstacles[i]->x + w < SCREEN_WIDTH)
+                        {
+                            obstacleMatrix[obstacles[i]->x + w][y] = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void moveObstacles()
 {
     for (int i = 0; i < NUM_OBSTACLES; i++)
     {
         if (!jumping) {
-            continue; 
+            continue;
         }
         obstacles[i]->x--;
         if (obstacles[i]->x < 0)
@@ -105,14 +143,15 @@ void moveObstacles()
 void drawObstacles()
 {
     screenSetColor(GREEN, BLACK);
-    for (int i = 0; i < NUM_OBSTACLES; i++)
+    updateObstacleMatrix();
+    for (int x = 0; x < SCREEN_WIDTH; x++)
     {
-        for (int y = 1; y < SCREEN_HEIGHT - 1; y++)
+        for (int y = 0; y < SCREEN_HEIGHT; y++)
         {
-            if (y < obstacles[i]->gap_y || y > obstacles[i]->gap_y + OBSTACLE_GAP)
+            if (obstacleMatrix[x][y])
             {
-                screenGotoxy(obstacles[i]->x, y);
-                printf("###");
+                screenGotoxy(x, y);
+                printf("#");
             }
         }
     }
@@ -151,6 +190,17 @@ void printScore()
     printf("Score: %d", score);
 }
 
+void readTopScore()
+{
+    FILE *file = fopen("topscore.txt", "r");
+    if (file) {
+        fscanf(file, "%d", &topScore);
+        fclose(file);
+    } else {
+        topScore = 0;
+    }
+}
+
 int main()
 {
     x = (int*)malloc(sizeof(int));
@@ -172,6 +222,7 @@ int main()
     keyboardInit();
     timerInit(50);
     initObstacles();
+    readTopScore();
 
     drawBorders();
 
@@ -222,8 +273,8 @@ int main()
                     switch (readch()) {
                         case 'A':
                             *velocity = JUMP_STRENGTH;
-                            gameStarted = 1; 
-                            jumping = 1; 
+                            gameStarted = 1;
+                            jumping = 1;
                             break;
                     }
                 }
