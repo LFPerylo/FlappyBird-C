@@ -6,45 +6,47 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define BIRD_WIDTH 5
-#define BIRD_HEIGHT 3
-#define GRAVITY 0.05
-#define JUMP_STRENGTH -0.50
-#define OBSTACLE_WIDTH 5
-#define OBSTACLE_GAP 6
-#define NUM_OBSTACLES 3
+#define LARGURA_PASSARO 5
+#define ALTURA_PASSARO 3
+#define GRAVIDADE 0.05
+#define FORCA_PULO -0.50
+#define LARGURA_OBSTACULO 5
+#define GAP_OBSTACULO 8 
+#define NUM_OBSTACULOS 3
 
 int* x;
 double* y;
-double* velocity;
-int score = 0;
-int topScore = 0;
-int gameStarted = 0;
-int jumping = 0;
+double* velocidade;
+int pontuacao = 0;
+int maiorPontuacao = 0;
+int jogoIniciado = 0;
+int pulando = 0;
 
 typedef struct {
     int x;
     int gap_y;
-} Obstacle;
+} Obstaculo;
 
-Obstacle* obstacles[NUM_OBSTACLES];
-char obstacleMatrix[SCREEN_WIDTH][SCREEN_HEIGHT];
+Obstaculo* obstaculos[NUM_OBSTACULOS];
+char matrizObstaculos[SCREEN_WIDTH][SCREEN_HEIGHT];
 
-void delay(unsigned int milliseconds)
+void atraso(unsigned int milissegundos)
 {
-    usleep(milliseconds * 1000);
+    usleep(milissegundos * 1000);
 }
 
-void printBird()
+void imprimirPassaro() 
 {
     screenSetColor(CYAN, DARKGRAY);
     screenGotoxy(*x, (int)(*y));
-    printf(" @> ");
+    printf("___( o)> ");
     screenGotoxy(*x, (int)(*y) + 1);
-    printf("/o \\");
+    printf("  \\    )");
+    screenGotoxy(*x, (int)(*y) + 2);
+    printf("   `~~`");
 }
 
-void drawBorders()
+void desenharBordas()
 {
     for (int x = 0; x < SCREEN_WIDTH; x++)
     {
@@ -62,60 +64,60 @@ void drawBorders()
     }
 }
 
-void gameOver()
+void fimDeJogo()
 {
-    if (score > topScore) {
-        topScore = score;
-        FILE *file = fopen("topscore.txt", "w");
+    if (pontuacao > maiorPontuacao) {
+        maiorPontuacao = pontuacao;
+        FILE *file = fopen("maiorpontuacao.txt", "w");
         if (file) {
-            fprintf(file, "%d\n", topScore);
+            fprintf(file, "%d\n", maiorPontuacao);
             fclose(file);
         }
     }
 
     screenSetColor(RED, BLACK);
     screenGotoxy(SCREEN_WIDTH / 2 - 5, SCREEN_HEIGHT / 2);
-    printf("Game Over");
+    printf("Fim de Jogo");
     screenGotoxy(SCREEN_WIDTH / 2 - 5, SCREEN_HEIGHT / 2 + 1);
-    printf("Top Score: %d", topScore);
+    printf("Maior Pontuação: %d", maiorPontuacao);
     screenUpdate();
-    delay(5000);
+    atraso(5000);
 }
 
-void initObstacles()
+void iniciarObstaculos()
 {
-    for (int i = 0; i < NUM_OBSTACLES; i++)
+    for (int i = 0; i < NUM_OBSTACULOS; i++)
     {
-        obstacles[i] = (Obstacle*)malloc(sizeof(Obstacle));
-        obstacles[i]->x = SCREEN_WIDTH + i * (SCREEN_WIDTH / NUM_OBSTACLES);
-        obstacles[i]->gap_y = rand() % (SCREEN_HEIGHT - OBSTACLE_GAP - 4) + 2;
+        obstaculos[i] = (Obstaculo*)malloc(sizeof(Obstaculo));
+        obstaculos[i]->x = SCREEN_WIDTH + i * (SCREEN_WIDTH / NUM_OBSTACULOS);
+        obstaculos[i]->gap_y = rand() % (SCREEN_HEIGHT - GAP_OBSTACULO - 4) + 2;
     }
 }
 
-void freeObstacles()
+void liberarObstaculos()
 {
-    for (int i = 0; i < NUM_OBSTACLES; i++)
+    for (int i = 0; i < NUM_OBSTACULOS; i++)
     {
-        free(obstacles[i]);
+        free(obstaculos[i]);
     }
 }
 
-void updateObstacleMatrix()
+void atualizarMatrizObstaculos()
 {
-    memset(obstacleMatrix, 0, sizeof(obstacleMatrix));
-    for (int i = 0; i < NUM_OBSTACLES; i++)
+    memset(matrizObstaculos, 0, sizeof(matrizObstaculos));
+    for (int i = 0; i < NUM_OBSTACULOS; i++)
     {
-        if (obstacles[i]->x >= 0 && obstacles[i]->x < SCREEN_WIDTH)
+        if (obstaculos[i]->x >= 0 && obstaculos[i]->x < SCREEN_WIDTH)
         {
             for (int y = 0; y < SCREEN_HEIGHT; y++)
             {
-                if (y < obstacles[i]->gap_y || y > obstacles[i]->gap_y + OBSTACLE_GAP)
+                if (y < obstaculos[i]->gap_y || y > obstaculos[i]->gap_y + GAP_OBSTACULO)
                 {
-                    for (int w = 0; w < OBSTACLE_WIDTH; w++)
+                    for (int w = 0; w < LARGURA_OBSTACULO; w++)
                     {
-                        if (obstacles[i]->x + w < SCREEN_WIDTH)
+                        if (obstaculos[i]->x + w < SCREEN_WIDTH)
                         {
-                            obstacleMatrix[obstacles[i]->x + w][y] = 1;
+                            matrizObstaculos[obstaculos[i]->x + w][y] = 1;
                         }
                     }
                 }
@@ -124,31 +126,31 @@ void updateObstacleMatrix()
     }
 }
 
-void moveObstacles()
+void moverObstaculos()
 {
-    for (int i = 0; i < NUM_OBSTACLES; i++)
+    for (int i = 0; i < NUM_OBSTACULOS; i++)
     {
-        if (!jumping) {
+        if (!pulando) {
             continue;
         }
-        obstacles[i]->x--;
-        if (obstacles[i]->x < 0)
+        obstaculos[i]->x--;
+        if (obstaculos[i]->x < 0)
         {
-            obstacles[i]->x = SCREEN_WIDTH;
-            obstacles[i]->gap_y = rand() % (SCREEN_HEIGHT - OBSTACLE_GAP - 4) + 2;
+            obstaculos[i]->x = SCREEN_WIDTH;
+            obstaculos[i]->gap_y = rand() % (SCREEN_HEIGHT - GAP_OBSTACULO - 4) + 2;
         }
     }
 }
 
-void drawObstacles()
+void desenharObstaculos()
 {
     screenSetColor(GREEN, BLACK);
-    updateObstacleMatrix();
+    atualizarMatrizObstaculos();
     for (int x = 0; x < SCREEN_WIDTH; x++)
     {
         for (int y = 0; y < SCREEN_HEIGHT; y++)
         {
-            if (obstacleMatrix[x][y])
+            if (matrizObstaculos[x][y])
             {
                 screenGotoxy(x, y);
                 printf("#");
@@ -157,13 +159,13 @@ void drawObstacles()
     }
 }
 
-int checkCollision()
+int verificarColisao()
 {
-    for (int i = 0; i < NUM_OBSTACLES; i++)
+    for (int i = 0; i < NUM_OBSTACULOS; i++)
     {
-        if (*x + BIRD_WIDTH >= obstacles[i]->x && *x <= obstacles[i]->x + OBSTACLE_WIDTH)
+        if (*x + LARGURA_PASSARO >= obstaculos[i]->x && *x <= obstaculos[i]->x + LARGURA_OBSTACULO)
         {
-            if (*y < obstacles[i]->gap_y || *y + BIRD_HEIGHT > obstacles[i]->gap_y + OBSTACLE_GAP)
+            if (*y < obstaculos[i]->gap_y || *y + ALTURA_PASSARO > obstaculos[i]->gap_y + GAP_OBSTACULO)
             {
                 return 1;
             }
@@ -172,32 +174,32 @@ int checkCollision()
     return 0;
 }
 
-void updateScore()
+void atualizarPontuacao()
 {
-    for (int i = 0; i < NUM_OBSTACLES; i++)
+    for (int i = 0; i < NUM_OBSTACULOS; i++)
     {
-        if (obstacles[i]->x == *x)
+        if (obstaculos[i]->x == *x)
         {
-            score++;
+            pontuacao++;
         }
     }
 }
 
-void printScore()
+void imprimirPontuacao()
 {
     screenSetColor(WHITE, BLACK);
     screenGotoxy(SCREEN_WIDTH / 2 - 5, 1);
-    printf("Score: %d", score);
+    printf("Pontuação: %d", pontuacao);
 }
 
-void readTopScore()
+void lerMaiorPontuacao()
 {
-    FILE *file = fopen("topscore.txt", "r");
+    FILE *file = fopen("maiorpontuacao.txt", "r");
     if (file) {
-        fscanf(file, "%d", &topScore);
+        fscanf(file, "%d", &maiorPontuacao);
         fclose(file);
     } else {
-        topScore = 0;
+        maiorPontuacao = 0;
     }
 }
 
@@ -205,62 +207,62 @@ int main()
 {
     x = (int*)malloc(sizeof(int));
     y = (double*)malloc(sizeof(double));
-    velocity = (double*)malloc(sizeof(double));
+    velocidade = (double*)malloc(sizeof(double));
 
-    if (!x || !y || !velocity) {
+    if (!x || !y || !velocidade) {
         fprintf(stderr, "Erro de alocação de memória\n");
         return 1;
     }
 
     *x = (SCREEN_WIDTH / 2) - 20;
     *y = SCREEN_HEIGHT / 2;
-    *velocity = 0;
+    *velocidade = 0;
 
     static int ch = 0;
 
     screenInit(1);
     keyboardInit();
     timerInit(50);
-    initObstacles();
-    readTopScore();
+    iniciarObstaculos();
+    lerMaiorPontuacao();
 
-    drawBorders();
+    desenharBordas();
 
     while (ch != 10)
     {
         screenClear();
-        drawBorders();
-        moveObstacles();
-        drawObstacles();
-        printBird();
-        printScore();
+        desenharBordas();
+        moverObstaculos();
+        desenharObstaculos();
+        imprimirPassaro();
+        imprimirPontuacao();
 
-        if (gameStarted && jumping)
+        if (jogoIniciado && pulando)
         {
-            *velocity += GRAVITY;
-            *y += *velocity;
+            *velocidade += GRAVIDADE;
+            *y += *velocidade;
 
             if (*y >= SCREEN_HEIGHT - 2)
             {
                 *y = SCREEN_HEIGHT - 2;
-                *velocity = 0;
-                gameOver();
+                *velocidade = 0;
+                fimDeJogo();
                 break;
             }
 
             if (*y < 1)
             {
                 *y = 1;
-                *velocity = 0;
+                *velocidade = 0;
             }
 
-            if (checkCollision())
+            if (verificarColisao())
             {
-                gameOver();
+                fimDeJogo();
                 break;
             }
 
-            updateScore();
+            atualizarPontuacao();
         }
 
         screenUpdate();
@@ -272,9 +274,9 @@ int main()
                 if (keyhit() && readch() == '[') {
                     switch (readch()) {
                         case 'A':
-                            *velocity = JUMP_STRENGTH;
-                            gameStarted = 1;
-                            jumping = 1;
+                            *velocidade = FORCA_PULO;
+                            jogoIniciado = 1;
+                            pulando = 1;
                             break;
                     }
                 }
@@ -283,13 +285,13 @@ int main()
             }
         }
 
-        delay(150);
+        atraso(150);
     }
 
     free(x);
     free(y);
-    free(velocity);
-    freeObstacles();
+    free(velocidade);
+    liberarObstaculos();
 
     keyboardDestroy();
     screenDestroy();
