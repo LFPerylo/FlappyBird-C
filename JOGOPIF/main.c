@@ -17,8 +17,8 @@
 int* x;
 double* y;
 double* velocidade;
-int pontuacao = 0;
-int maiorPontuacao = 0;
+int score = 0;
+int TopScore = 0;
 int jogoIniciado = 0;
 int pulando = 0;
 
@@ -30,93 +30,69 @@ typedef struct {
 Obstaculo* obstaculos[NUM_OBSTACULOS];
 char matrizObstaculos[SCREEN_WIDTH][SCREEN_HEIGHT];
 
-void atraso(unsigned int milissegundos)
-{
-    usleep(milissegundos * 1000);
-}
-
-void imprimirPassaro() 
-{
-    screenSetColor(CYAN, DARKGRAY);
+void printarPassaro() {
+    screenSetColor(YELLOW, YELLOW);
     screenGotoxy(*x, (int)(*y));
     printf("___( o)> ");
     screenGotoxy(*x, (int)(*y) + 1);
     printf("  \\    )");
-    screenGotoxy(*x, (int)(*y) + 2);
-    printf("   `~~`");
+    screenSetColor(WHITE, BLACK);
 }
 
-void desenharBordas()
-{
-    for (int x = 0; x < SCREEN_WIDTH; x++)
-    {
-        screenGotoxy(x, 0);
-        putchar('*');
-        screenGotoxy(x, SCREEN_HEIGHT - 1);
-        putchar('*');
-    }
-    for (int y = 1; y < SCREEN_HEIGHT - 1; y++)
-    {
-        screenGotoxy(0, y);
-        putchar('*');
-        screenGotoxy(SCREEN_WIDTH - 1, y);
-        putchar('*');
-    }
-}
-
-void fimDeJogo()
-{
-    if (pontuacao > maiorPontuacao) {
-        maiorPontuacao = pontuacao;
-        FILE *file = fopen("maiorpontuacao.txt", "w");
+void gameOver() {
+    if (score > TopScore) {
+        TopScore = score;
+        FILE *file = fopen("TopScore.txt", "w");
         if (file) {
-            fprintf(file, "%d\n", maiorPontuacao);
+            fprintf(file, "%d\n", TopScore);
             fclose(file);
         }
     }
-
     screenSetColor(RED, BLACK);
     screenGotoxy(SCREEN_WIDTH / 2 - 5, SCREEN_HEIGHT / 2);
-    printf("Fim de Jogo");
+    printf("Game Over");
     screenGotoxy(SCREEN_WIDTH / 2 - 5, SCREEN_HEIGHT / 2 + 1);
-    printf("Maior Pontuação: %d", maiorPontuacao);
+    printf("TopScore: %d", TopScore);
     screenUpdate();
-    atraso(5000);
+    usleep(5000 * 1000); // 5000 ms delay
 }
 
-void iniciarObstaculos()
-{
-    for (int i = 0; i < NUM_OBSTACULOS; i++)
-    {
+void iniciarObstaculos() {
+    for (int i = 0; i < NUM_OBSTACULOS; i++) {
         obstaculos[i] = (Obstaculo*)malloc(sizeof(Obstaculo));
         obstaculos[i]->x = SCREEN_WIDTH + i * (SCREEN_WIDTH / NUM_OBSTACULOS);
         obstaculos[i]->gap_y = rand() % (SCREEN_HEIGHT - GAP_OBSTACULO - 4) + 2;
     }
 }
 
-void liberarObstaculos()
-{
-    for (int i = 0; i < NUM_OBSTACULOS; i++)
-    {
+void liberarObstaculos() {
+    for (int i = 0; i < NUM_OBSTACULOS; i++) {
         free(obstaculos[i]);
     }
 }
 
-void atualizarMatrizObstaculos()
-{
-    memset(matrizObstaculos, 0, sizeof(matrizObstaculos));
-    for (int i = 0; i < NUM_OBSTACULOS; i++)
-    {
-        if (obstaculos[i]->x >= 0 && obstaculos[i]->x < SCREEN_WIDTH)
-        {
-            for (int y = 0; y < SCREEN_HEIGHT; y++)
-            {
-                if (y < obstaculos[i]->gap_y || y > obstaculos[i]->gap_y + GAP_OBSTACULO)
-                {
-                    for (int w = 0; w < LARGURA_OBSTACULO; w++)
-                    {
-                        if (obstaculos[i]->x + w < SCREEN_WIDTH)
-                        {
+void moverObstaculos() {
+    for (int i = 0; i < NUM_OBSTACULOS; i++) {
+        if (!pulando) {
+            continue;
+        }
+        obstaculos[i]->x--;
+        if (obstaculos[i]->x < 0) {
+            obstaculos[i]->x = SCREEN_WIDTH;
+            obstaculos[i]->gap_y = rand() % (SCREEN_HEIGHT - GAP_OBSTACULO - 4) + 2;
+        }
+    }
+}
+
+void desenharObstaculos() {
+    screenSetColor(GREEN, BLACK);
+    memset(matrizObstaculos, 0, sizeof(matrizObstaculos)); // Clear the matrix
+    for (int i = 0; i < NUM_OBSTACULOS; i++) {
+        if (obstaculos[i]->x >= 0 && obstaculos[i]->x < SCREEN_WIDTH) {
+            for (int y = 0; y < SCREEN_HEIGHT; y++) {
+                if (y < obstaculos[i]->gap_y || y > obstaculos[i]->gap_y + GAP_OBSTACULO) {
+                    for (int w = 0; w < LARGURA_OBSTACULO; w++) {
+                        if (obstaculos[i]->x + w < SCREEN_WIDTH) {
                             matrizObstaculos[obstaculos[i]->x + w][y] = 1;
                         }
                     }
@@ -124,49 +100,21 @@ void atualizarMatrizObstaculos()
             }
         }
     }
-}
-
-void moverObstaculos()
-{
-    for (int i = 0; i < NUM_OBSTACULOS; i++)
-    {
-        if (!pulando) {
-            continue;
-        }
-        obstaculos[i]->x--;
-        if (obstaculos[i]->x < 0)
-        {
-            obstaculos[i]->x = SCREEN_WIDTH;
-            obstaculos[i]->gap_y = rand() % (SCREEN_HEIGHT - GAP_OBSTACULO - 4) + 2;
-        }
-    }
-}
-
-void desenharObstaculos()
-{
-    screenSetColor(GREEN, BLACK);
-    atualizarMatrizObstaculos();
-    for (int x = 0; x < SCREEN_WIDTH; x++)
-    {
-        for (int y = 0; y < SCREEN_HEIGHT; y++)
-        {
-            if (matrizObstaculos[x][y])
-            {
+    for (int x = 0; x < SCREEN_WIDTH; x++) {
+        for (int y = 0; y < SCREEN_HEIGHT; y++) {
+            if (matrizObstaculos[x][y]) {
                 screenGotoxy(x, y);
                 printf("#");
             }
         }
     }
+    screenSetColor(WHITE, BLACK);
 }
 
-int verificarColisao()
-{
-    for (int i = 0; i < NUM_OBSTACULOS; i++)
-    {
-        if (*x + LARGURA_PASSARO >= obstaculos[i]->x && *x <= obstaculos[i]->x + LARGURA_OBSTACULO)
-        {
-            if (*y < obstaculos[i]->gap_y || *y + ALTURA_PASSARO > obstaculos[i]->gap_y + GAP_OBSTACULO)
-            {
+int verificarColisao() {
+    for (int i = 0; i < NUM_OBSTACULOS; i++) {
+        if (*x + LARGURA_PASSARO >= obstaculos[i]->x && *x <= obstaculos[i]->x + LARGURA_OBSTACULO) {
+            if (*y < obstaculos[i]->gap_y || *y + ALTURA_PASSARO > obstaculos[i]->gap_y + GAP_OBSTACULO) {
                 return 1;
             }
         }
@@ -174,37 +122,31 @@ int verificarColisao()
     return 0;
 }
 
-void atualizarPontuacao()
-{
-    for (int i = 0; i < NUM_OBSTACULOS; i++)
-    {
-        if (obstaculos[i]->x == *x)
-        {
-            pontuacao++;
+void atualizarPontuacao() {
+    for (int i = 0; i < NUM_OBSTACULOS; i++) {
+        if (obstaculos[i]->x == *x) {
+            score++;
         }
     }
 }
 
-void imprimirPontuacao()
-{
+void printarPontuacao() {
     screenSetColor(WHITE, BLACK);
     screenGotoxy(SCREEN_WIDTH / 2 - 5, 1);
-    printf("Pontuação: %d", pontuacao);
+    printf("Score: %d", score);
 }
 
-void lerMaiorPontuacao()
-{
-    FILE *file = fopen("maiorpontuacao.txt", "r");
+void lerMaiorPontuacao() {
+    FILE *file = fopen("TopScore.txt", "r");
     if (file) {
-        fscanf(file, "%d", &maiorPontuacao);
+        fscanf(file, "%d", &TopScore);
         fclose(file);
     } else {
-        maiorPontuacao = 0;
+        TopScore = 0;
     }
 }
 
-int main()
-{
+int main() {
     x = (int*)malloc(sizeof(int));
     y = (double*)malloc(sizeof(double));
     velocidade = (double*)malloc(sizeof(double));
@@ -226,39 +168,32 @@ int main()
     iniciarObstaculos();
     lerMaiorPontuacao();
 
-    desenharBordas();
-
-    while (ch != 10)
-    {
+    while (ch != 10) {
         screenClear();
-        desenharBordas();
+        screenDrawBorders();
         moverObstaculos();
         desenharObstaculos();
-        imprimirPassaro();
-        imprimirPontuacao();
+        printarPassaro();
+        printarPontuacao();
 
-        if (jogoIniciado && pulando)
-        {
+        if (jogoIniciado && pulando) {
             *velocidade += GRAVIDADE;
             *y += *velocidade;
 
-            if (*y >= SCREEN_HEIGHT - 2)
-            {
+            if (*y >= SCREEN_HEIGHT - 2) {
                 *y = SCREEN_HEIGHT - 2;
                 *velocidade = 0;
-                fimDeJogo();
+                gameOver();
                 break;
             }
 
-            if (*y < 1)
-            {
+            if (*y < 1) {
                 *y = 1;
                 *velocidade = 0;
             }
 
-            if (verificarColisao())
-            {
-                fimDeJogo();
+            if (verificarColisao()) {
+                gameOver();
                 break;
             }
 
@@ -267,8 +202,7 @@ int main()
 
         screenUpdate();
 
-        if (keyhit())
-        {
+        if (keyhit()) {
             ch = readch();
             if (ch == 27) {
                 if (keyhit() && readch() == '[') {
@@ -285,7 +219,7 @@ int main()
             }
         }
 
-        atraso(150);
+        usleep(150 * 1000); // 150 ms delay
     }
 
     free(x);
@@ -299,3 +233,4 @@ int main()
 
     return 0;
 }
+
