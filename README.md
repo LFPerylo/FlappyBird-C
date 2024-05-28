@@ -6,7 +6,7 @@ Flappy Bird, lançado em 2013, é um jogo incrivelmente viciante e simples, onde
 ## 🎯 Objetivo do Jogo
 O objetivo de Flappy Bird é controlar o pássaro e passar por entre os obstáculos que se movem em direção a ele. O jogador deve evitar as colisões para continuar o jogo e acumular pontos. A cada obstáculo passado, a pontuação do jogador aumenta.
 
-### 🐦 NavexBird:
+### 🐔 Flappy Bird:
 Faça o máximo de pontos que conseguir, evitando colidir com os obstáculos!
 
 ## 🎮 Como Jogar
