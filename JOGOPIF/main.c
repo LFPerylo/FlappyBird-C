@@ -168,7 +168,7 @@ int main() {
     *y = SCREEN_HEIGHT / 2;
     *velocidade = 0;
 
-    static int ch = 0;
+    int ch = 0;
 
     screenInit(1);
     keyboardInit();
