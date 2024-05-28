@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define LARGURA_PASSARO 5
-#define ALTURA_PASSARO 3
+#define LARGURA_PASSARO 7
+#define ALTURA_PASSARO 1
 #define GRAVIDADE 0.05
 #define FORCA_PULO -0.50
 #define LARGURA_OBSTACULO 5
@@ -33,9 +33,9 @@ char matrizObstaculos[SCREEN_WIDTH][SCREEN_HEIGHT];
 void printarPassaro() {
     screenSetColor(YELLOW, YELLOW);
     screenGotoxy(*x, (int)(*y));
-    printf("___( o)> ");
+    printf("___( o)>");
     screenGotoxy(*x, (int)(*y) + 1);
-    printf("  \\    )");
+    printf("  \\   )");
     screenSetColor(WHITE, BLACK);
 }
 
@@ -77,7 +77,7 @@ void moverObstaculos() {
             continue;
         }
         obstaculos[i]->x--;
-        if (obstaculos[i]->x < 0) {
+        if (obstaculos[i]->x < -LARGURA_OBSTACULO) {
             obstaculos[i]->x = SCREEN_WIDTH;
             obstaculos[i]->gap_y = rand() % (SCREEN_HEIGHT - GAP_OBSTACULO - 4) + 2;
         }
@@ -132,7 +132,7 @@ int verificarColisao() {
 
 void atualizarPontuacao() {
     for (int i = 0; i < NUM_OBSTACULOS; i++) {
-        if (obstaculos[i]->x == *x) {
+        if (obstaculos[i]->x + LARGURA_OBSTACULO == *x) {
             score++;
         }
     }
@@ -241,4 +241,3 @@ int main() {
 
     return 0;
 }
-
