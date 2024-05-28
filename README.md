@@ -1,7 +1,7 @@
 # Flappy Bird
 
 ## 📄 Descrição
-Flappy Bird é um clássico jogo de arcade onde os jogadores controlam um pássaro que deve voar através de uma série de obstáculos sem colidir com eles.
+Flappy Bird, lançado em 2013, é um jogo incrivelmente viciante e simples, onde o objetivo é fazer um pássaro desviar de canos enquanto voa.
 
 ## 🎯 Objetivo do Jogo
 O objetivo de Flappy Bird é controlar o pássaro e passar por entre os obstáculos que se movem em direção a ele. O jogador deve evitar as colisões para continuar o jogo e acumular pontos. A cada obstáculo passado, a pontuação do jogador aumenta.
