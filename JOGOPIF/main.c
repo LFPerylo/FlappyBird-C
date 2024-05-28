@@ -86,7 +86,13 @@ void moverObstaculos() {
 
 void desenharObstaculos() {
     screenSetColor(GREEN, BLACK);
-    memset(matrizObstaculos, 0, sizeof(matrizObstaculos)); 
+
+    for (int i = 0; i < SCREEN_WIDTH; i++) {
+        for (int j = 0; j < SCREEN_HEIGHT; j++) {
+            matrizObstaculos[i][j] = 0;
+        }
+    }
+
     for (int i = 0; i < NUM_OBSTACULOS; i++) {
         if (obstaculos[i]->x >= 0 && obstaculos[i]->x < SCREEN_WIDTH) {
             for (int y = 0; y < SCREEN_HEIGHT; y++) {
@@ -100,6 +106,7 @@ void desenharObstaculos() {
             }
         }
     }
+
     for (int x = 0; x < SCREEN_WIDTH; x++) {
         for (int y = 0; y < SCREEN_HEIGHT; y++) {
             if (matrizObstaculos[x][y]) {
@@ -108,12 +115,13 @@ void desenharObstaculos() {
             }
         }
     }
+
     screenSetColor(WHITE, BLACK);
 }
 
 int verificarColisao() {
     for (int i = 0; i < NUM_OBSTACULOS; i++) {
-        if (*x + LARGURA_PASSARO >= obstaculos[i]->x && *x <= obstaculos[i]->x + LARGURA_OBSTACULO) {
+        if (*x + LARGURA_PASSARO == obstaculos[i]->x || *x == obstaculos[i]->x + LARGURA_OBSTACULO) {
             if (*y < obstaculos[i]->gap_y || *y + ALTURA_PASSARO > obstaculos[i]->gap_y + GAP_OBSTACULO) {
                 return 1;
             }
