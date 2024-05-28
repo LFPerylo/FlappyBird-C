@@ -54,7 +54,7 @@ void gameOver() {
     screenGotoxy(SCREEN_WIDTH / 2 - 5, SCREEN_HEIGHT / 2 + 1);
     printf("TopScore: %d", TopScore);
     screenUpdate();
-    usleep(5000 * 1000); // 5000 ms delay
+    usleep(5000 * 1000); 
 }
 
 void iniciarObstaculos() {
@@ -86,7 +86,7 @@ void moverObstaculos() {
 
 void desenharObstaculos() {
     screenSetColor(GREEN, BLACK);
-    memset(matrizObstaculos, 0, sizeof(matrizObstaculos)); // Clear the matrix
+    memset(matrizObstaculos, 0, sizeof(matrizObstaculos)); 
     for (int i = 0; i < NUM_OBSTACULOS; i++) {
         if (obstaculos[i]->x >= 0 && obstaculos[i]->x < SCREEN_WIDTH) {
             for (int y = 0; y < SCREEN_HEIGHT; y++) {
@@ -219,7 +219,7 @@ int main() {
             }
         }
 
-        usleep(150 * 1000); // 150 ms delay
+        usleep(150 * 1000); 
     }
 
     free(x);
