@@ -20,7 +20,7 @@ Para executar o Flappy Bird, siga estas etapas:
 
 1. Clone este repositório em sua máquina:
     ```sh
-    git clone https://github.com/LFPerylo/PROJETO-PIF.git
+    https://github.com/LFPerylo/PROJETO-PIF.git
     ```
 2. Navegue até o diretório correto:
     ```sh
