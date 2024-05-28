@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #define LARGURA_PASSARO 7
-#define ALTURA_PASSARO 1
+#define ALTURA_PASSARO 1.5
 #define GRAVIDADE 0.05
 #define FORCA_PULO -0.50
 #define LARGURA_OBSTACULO 5
