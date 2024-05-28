@@ -11,7 +11,6 @@ Faça o máximo de pontos que conseguir, evitando colidir com os obstáculos!
 
 ## 🎮 Como Jogar
 - Use a seta para cima para fazer o pássaro pular.
-- Certifique-se de manter o caps lock desativado.
 - Mantenha o pássaro em movimento para evitar os obstáculos e acumular pontos.
 - Caso colida com um obstáculo, o jogo terminará.
 
