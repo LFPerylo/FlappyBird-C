@@ -36,7 +36,6 @@ void printarPassaro() {
     printf("___( o)>");
     screenGotoxy(*x, (int)(*y) + 1);
     printf("  \\   )");
-    screenSetColor(WHITE, BLACK);
 }
 
 void gameOver() {
@@ -94,14 +93,19 @@ void desenharObstaculos() {
     }
 
     for (int i = 0; i < NUM_OBSTACULOS; i++) {
-        if (obstaculos[i]->x >= 0 && obstaculos[i]->x < SCREEN_WIDTH) {
-            for (int y = 0; y < SCREEN_HEIGHT; y++) {
-                if (y < obstaculos[i]->gap_y || y > obstaculos[i]->gap_y + GAP_OBSTACULO) {
-                    for (int w = 0; w < LARGURA_OBSTACULO; w++) {
-                        if (obstaculos[i]->x + w < SCREEN_WIDTH) {
-                            matrizObstaculos[obstaculos[i]->x + w][y] = 1;
-                        }
-                    }
+        int x = obstaculos[i]->x;
+        int gap_y = obstaculos[i]->gap_y;
+
+        if (x >= 0 && x < SCREEN_WIDTH) {
+            for (int w = 0; w < LARGURA_OBSTACULO; w++) {
+                if (x + w >= SCREEN_WIDTH) {
+                    break; 
+                }
+                for (int y = 0; y < gap_y; y++) {
+                    matrizObstaculos[x + w][y] = 1;
+                }
+                for (int y = gap_y + GAP_OBSTACULO; y < SCREEN_HEIGHT; y++) {
+                    matrizObstaculos[x + w][y] = 1;
                 }
             }
         }
@@ -115,8 +119,6 @@ void desenharObstaculos() {
             }
         }
     }
-
-    screenSetColor(WHITE, BLACK);
 }
 
 int verificarColisao() {
